@@ -1,11 +1,13 @@
 #ifndef SarahHome_h
 #define SarahHome_h
 
+#include "Arduino.h"
 #include "ESP8266WiFi.h"
 #include "ESP8266mDNS.h"
 #include "WiFiUdp.h"
 #include "ArduinoOTA.h"
 #include "PubSubClient.h"
+#include "KeyValueStore.h"
 
 class SarahHome
 {
@@ -13,24 +15,25 @@ class SarahHome
     SarahHome();
     void setup();
     void loop();
-
+    String getNodeId();
     PubSubClient mqttClient;
   private:
+    void setupVariables();
     void setMqttName();
     void connectWifi();
     void connectMqtt();
     void setupOTA();
 
-    const char* mqttUsername;
-    const char* mqttPassword;
-    const char* mqttServer;
-    const char* mqttClientNameFormat;
+    String mqttUsername;
+    String mqttPassword;
+    String mqttServer;
+    String mqttClientNameFormat;
     char mqttClientName[20];
     WiFiClient wifiClient;
 
-    const char* wifiSsid;
-    const char* wifiPassword;
+    String wifiSsid;
+    String wifiPassword;
 
-    const char* nodeId;
+    String nodeId;
 };
 #endif

@@ -1,6 +1,5 @@
 #include "OneWire.h"
 #include "DallasTemperature.h"
-#include <KeyValueStore.h>
 #include "SarahHome.h"
 
 const char* mqttTopic = "sensors/56ec57b951b33c384fbc2f6e/readings";

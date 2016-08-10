@@ -4,7 +4,9 @@ KeyValueStore kvstore;
 
 SarahHome::SarahHome() {
   mqttClientNameFormat = "sarah-%d";
+}
 
+void SarahHome::setupVariables() {
   mqttUsername = kvstore.read("mqttUsername");
   mqttPassword = kvstore.read("mqttPassword");
   mqttServer = kvstore.read("mqttServer");
@@ -15,20 +17,24 @@ SarahHome::SarahHome() {
   nodeId = kvstore.read("nodeId");
 }
 
+String SarahHome::getNodeId() {
+  return nodeId;
+}
+
 void SarahHome::setup() {
+  setupVariables();
   connectWifi();
   setMqttName();
   connectMqtt();
   setupOTA();
-  Serial.printf("Node %s ready\n", nodeId);
+  Serial.printf("Node %s ready\n", nodeId.c_str());
 }
 
 void SarahHome::setupOTA() {
-  ArduinoOTA.setHostname(nodeId);
+  ArduinoOTA.setHostname(nodeId.c_str());
 
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%", (progress / (total / 100)));
-    Serial.println();
+    Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
   });
 
   ArduinoOTA.onError([](ota_error_t error) {
@@ -45,9 +51,9 @@ void SarahHome::setupOTA() {
 void SarahHome::connectWifi() {
   WiFi.mode(WIFI_STA);
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.printf("Attempting to connect to WPA SSID: %s\n", wifiSsid);
+    Serial.printf("Attempting to connect to WPA SSID: %s\n", wifiSsid.c_str());
     // Connect to WPA/WPA2 network:
-    WiFi.begin(wifiSsid, wifiPassword);
+    WiFi.begin(wifiSsid.c_str(), wifiPassword.c_str());
 
     // wait 10 seconds for connection:
     delay(10000);
@@ -61,25 +67,25 @@ void SarahHome::connectWifi() {
 
 void SarahHome::setMqttName() {
   randomSeed(RANDOM_REG32);
-  sprintf(mqttClientName, mqttClientNameFormat, random(1000));
+  sprintf(mqttClientName, mqttClientNameFormat.c_str(), random(1000));
 }
 
 void SarahHome::connectMqtt() {
   mqttClient = PubSubClient(wifiClient);
-  mqttClient.setServer(mqttServer, 1883);
+  mqttClient.setServer(mqttServer.c_str(), 1883);
 
   int attempts = 0;
   while (!mqttClient.connected()) {
     Serial.printf("MQTT client name: %s\n", mqttClientName);
-    Serial.printf("Attempting to connect to MQTT server: %s\n", mqttServer);
+    Serial.printf("Attempting to connect to MQTT server: %s\n", mqttServer.c_str());
     boolean connected = mqttClient.connect(
       mqttClientName,
-      mqttUsername,
-      mqttPassword,
+      mqttUsername.c_str(),
+      mqttPassword.c_str(),
       "devices/disconnected",
       0,
       0,
-      nodeId
+      nodeId.c_str()
     );
     if (!connected) {
       Serial.print("MQTT Connection Error: ");
@@ -95,7 +101,7 @@ void SarahHome::connectMqtt() {
   }
 
   Serial.println("**MQTT Connected**");
-  mqttClient.publish("devices/connected", nodeId);
+  mqttClient.publish("devices/connected", nodeId.c_str());
 }
 
 void SarahHome::loop() {
