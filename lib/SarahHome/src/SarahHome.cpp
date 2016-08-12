@@ -6,6 +6,87 @@ SarahHome::SarahHome() {
   mqttClientNameFormat = "sarah-%d";
 }
 
+String SarahHome::readString(bool output) {
+  char byte = 0;
+  String string = "";
+  while (true) {
+    if (Serial.available() > 0) {
+      byte = Serial.read();
+      if (output) {
+        Serial.print(byte);
+      }
+      if (byte == '\n') {
+        string.trim();
+        return string;
+      }
+      string += byte;
+    }
+  }
+}
+
+String SarahHome::readString() {
+  return readString(false);
+}
+
+bool SarahHome::userConfirm() {
+  while (true) {
+    if (Serial.available() > 0) {
+      return Serial.read() == 'y';
+    }
+  }
+}
+
+void SarahHome::enterUserValue(String key) {
+  Serial.printf("Set '%s': \n", key.c_str());
+  String input = readString(true);
+
+  if (input.length() == 0) {
+    Serial.println("Skipping...");
+    return;
+  }
+
+  Serial.print("You entered ");
+  Serial.println(input);
+  Serial.println("Confirm (y/n)?");
+  if (userConfirm()) {
+    kvstore.write(key, input);
+  }
+}
+
+void SarahHome::changeVariables() {
+  Serial.println("Clear local storage (y/n)?");
+  if (userConfirm()) {
+    kvstore.clear();
+    Serial.println("Storage cleared");
+  } else {
+    Serial.println("Storage contents:");
+    kvstore.output();
+  }
+
+  String keys[6] = {"mqttServer", "mqttUsername", "mqttPassword", "wifiSsid", "wifiPassword", "nodeId"};
+  for (int i = 0; i < 6; i++) {
+    enterUserValue(keys[i]);
+  }
+  Serial.println("Storage is now set to:");
+  kvstore.output();
+}
+
+void SarahHome::setupKeyValueStore() {
+  int timeout = millis() + 5000;
+  Serial.println("Do you want to change settings? (y/n)");
+  while(millis() < timeout) {
+    if (Serial.available() > 0) {
+      char c = Serial.read();
+      if (c == 'y') {
+        return changeVariables();
+      } else if (c == 'n') {
+        break;
+      }
+    }
+  }
+  Serial.println("Skipping settings change...");
+}
+
 void SarahHome::setupVariables() {
   mqttUsername = kvstore.read("mqttUsername");
   mqttPassword = kvstore.read("mqttPassword");
@@ -22,6 +103,7 @@ String SarahHome::getNodeId() {
 }
 
 void SarahHome::setup() {
+  setupKeyValueStore();
   setupVariables();
   connectWifi();
   setMqttName();
@@ -62,7 +144,7 @@ void SarahHome::connectWifi() {
   Serial.println("**WiFi connected**");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-  Serial.printf("Signal strength: %s\n", WiFi.RSSI());
+  Serial.printf("Signal strength: %d\n", WiFi.RSSI());
 }
 
 void SarahHome::setMqttName() {

@@ -23,6 +23,12 @@ class SarahHome
     void connectWifi();
     void connectMqtt();
     void setupOTA();
+    void changeVariables();
+    String readString(bool);
+    String readString();
+    bool userConfirm();
+    void enterUserValue(String);
+    void setupKeyValueStore();
 
     String mqttUsername;
     String mqttPassword;
