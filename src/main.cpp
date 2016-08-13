@@ -2,6 +2,8 @@
 #include "DallasTemperature.h"
 #include "SarahHome.h"
 
+#define VERSION "7"
+
 const char* mqttTopicFormat = "sensors/%s/readings";
 char mqttTopic[50];
 
@@ -18,7 +20,7 @@ unsigned long timeBetweenPublish = 300000; //5 minutes
 void setup()
 {
   Serial.begin(9600);
-  sarahHome.setup();
+  sarahHome.setup(VERSION);
   sprintf(mqttTopic, mqttTopicFormat, sarahHome.getNodeId().c_str());
 }
 
@@ -40,6 +42,10 @@ void publishTemperature() {
   //Avoid the power on state where the first reading is 85
   if (temperature == 85) {
     return publishTemperature();
+  }
+
+  if (temperature == -127) {
+    Serial.println("Sensor not found");
   }
 
   if ((millis() - lastTemperaturePublish) > timeBetweenPublish ||
