@@ -9,7 +9,7 @@ char mqttTopic[50];
 #define ONE_WIRE_BUS 2
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-SarahHome sarahHome;
+SarahHome sarahHome("sensors");
 
 float lastTemperature;
 unsigned long lastTemperaturePublish = 0;
